@@ -1,0 +1,17 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.vscode/
+.cursor/
+dist/
+coverage/
+uploads/
+
+prisma/migrations/
+
+certs/
+*.pem
+*.key
+*.crt
+*.p12

@@ -1,0 +1,219 @@
+{
+  "info": {
+    "name": "safespace-mobile-server",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /auth/register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.accessToken) pm.environment.set('accessToken', json.accessToken);",
+                  "if (json && json.refreshToken) pm.environment.set('refreshToken', json.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"strong-password\",\n  \"fullName\": \"User Name\",\n  \"phone\": \"+201234567890\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.accessToken) pm.environment.set('accessToken', json.accessToken);",
+                  "if (json && json.refreshToken) pm.environment.set('refreshToken', json.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"email\": \"user@example.com\", \"password\": \"strong-password\", \"deviceId\": \"string\", \"fcmToken\": \"string\" }"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/refresh-token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json && json.accessToken) pm.environment.set('accessToken', json.accessToken);",
+                  "if (json && json.refreshToken) pm.environment.set('refreshToken', json.refreshToken);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"refreshToken\": \"{{refreshToken}}\" }" },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "refresh-token"]
+            }
+          }
+        },
+        {
+          "name": "POST /auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"refreshToken\": \"{{refreshToken}}\" }" },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Accidents & Emergency",
+      "item": [
+        {
+          "name": "POST /accident/report-accident",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"location\": { \"lat\": 30.0444, \"lng\": 31.2357 },\n  \"message\": \"optional message from the user\",\n  \"occurredAt\": \"2026-01-29T12:34:56.000Z\",\n  \"media\": [\n    { \"type\": \"image\", \"url\": \"https://example.com/image.jpg\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/accident/report-accident",
+              "host": ["{{baseUrl}}"],
+              "path": ["accident", "report-accident"]
+            }
+          }
+        },
+        {
+          "name": "POST /accident/emergency-request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestedAt\": \"2026-01-29T12:34:56.000Z\",\n  \"location\": { \"lat\": 30.0444, \"lng\": 31.2357 },\n  \"message\": \"optional\",\n  \"requestTypes\": [\"police\", \"medical\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/accident/emergency-request",
+              "host": ["{{baseUrl}}"],
+              "path": ["accident", "emergency-request"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Central Unit",
+      "item": [
+        {
+          "name": "POST /central-unit/send-accident-to-central-unit",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accidentId\": \"00000000-0000-0000-0000-000000000000\",\n  \"description\": \"string\",\n  \"latitude\": 30.0444,\n  \"longitude\": 31.2357,\n  \"severity\": \"low\",\n  \"media\": [ { \"type\": \"image\", \"url\": \"https://example.com/image.jpg\" } ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/central-unit/send-accident-to-central-unit",
+              "host": ["{{baseUrl}}"],
+              "path": ["central-unit", "send-accident-to-central-unit"]
+            }
+          }
+        },
+        {
+          "name": "POST /central-unit/receive-accident-from-central-unit",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"centralUnitAccidentId\": \"string\",\n  \"occurredAt\": \"2026-01-29T12:34:56.000Z\",\n  \"location\": { \"lat\": 30.0444, \"lng\": 31.2357 }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/central-unit/receive-accident-from-central-unit",
+              "host": ["{{baseUrl}}"],
+              "path": ["central-unit", "receive-accident-from-central-unit"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "POST /notifications/send-accident-notification",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"accidentId\": \"00000000-0000-0000-0000-000000000000\",\n  \"userIds\": [\"00000000-0000-0000-0000-000000000000\"],\n  \"title\": \"Accident nearby\",\n  \"body\": \"An accident was reported near you.\",\n  \"streetName\": \"Example Street Name\",\n  \"data\": { \"type\": \"ACCIDENT\", \"accidentId\": \"00000000-0000-0000-0000-000000000000\" }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notifications/send-accident-notification",
+              "host": ["{{baseUrl}}"],
+              "path": ["notifications", "send-accident-notification"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" }
+  ]
+}
+

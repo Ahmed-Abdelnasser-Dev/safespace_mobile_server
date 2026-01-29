@@ -1,0 +1,118 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AccidentSource {
+  MOBILE
+  CENTRAL_UNIT
+}
+
+enum EmergencyRequestStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String?
+  fullName     String
+  phone        String?
+  role         String   @default("USER")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  accidents        Accident[]
+  emergencyRequests EmergencyRequest[]
+  sessions         Session[]
+}
+
+model Session {
+  id               String   @id @default(uuid())
+  userId           String
+  deviceId         String?
+  fcmToken         String?
+  refreshTokenHash String
+  revokedAt        DateTime?
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Accident {
+  id                     String        @id @default(uuid())
+  reporterUserId         String?
+  source                 AccidentSource
+  occurredAt             DateTime
+  lat                    Float
+  lng                    Float
+  message                String?
+  description            String?
+  severity               String?
+  centralUnitAccidentId  String?
+  centralUnitReferenceId String?
+  status                 String        @default("RECEIVED")
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  reporter User?          @relation(fields: [reporterUserId], references: [id], onDelete: SetNull)
+  media    AccidentMedia[]
+
+  @@index([reporterUserId])
+  @@index([createdAt])
+  @@index([centralUnitAccidentId])
+}
+
+model AccidentMedia {
+  id         String   @id @default(uuid())
+  accidentId String
+  type       String
+  url        String
+  createdAt  DateTime @default(now())
+
+  accident Accident @relation(fields: [accidentId], references: [id], onDelete: Cascade)
+
+  @@index([accidentId])
+}
+
+model EmergencyRequest {
+  id            String                @id @default(uuid())
+  requesterUserId String?
+  requestedAt   DateTime
+  lat           Float
+  lng           Float
+  message       String?
+  requestTypes  String[]
+  status        EmergencyRequestStatus @default(QUEUED)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  requester User? @relation(fields: [requesterUserId], references: [id], onDelete: SetNull)
+
+  @@index([requesterUserId])
+  @@index([createdAt])
+}
+
+model NotificationLog {
+  id        String   @id @default(uuid())
+  accidentId String?
+  userId    String?
+  provider  String
+  status    String
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([accidentId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
