@@ -28,9 +28,46 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // Personal Information
+  displayName       String?
+  username          String?  @unique
+  profilePictureUrl String?
+  phoneNumber       String?
+  country           String?
+  city              String?
+  address           String?
+  street            String?
+
+  // Medical Information
+  bloodType           String?
+  allergies           String[] // Array of allergy strings
+  chronicConditions   String[] // Array of chronic conditions
+  currentMedications  String[] // Array of current medications
+  disabilities        String[] // Array of disabilities
+  medicalNotes        String?  // Free-form medical notes
+  heightCm            Float?
+  weightKg            Float?
+  smoker              Boolean?
+  alcoholConsumption  String?  // e.g., "none", "occasional", "moderate", "heavy"
+  medicalInfoUpdatedAt DateTime?
+
+  // Identification Data
+  fullLegalName            String?
+  dateOfBirth              DateTime?
+  gender                   String?
+  nationality              String?
+  nationalIdNumber         String?
+  passportNumber           String?
+  emergencyContactName     String?
+  emergencyContactPhone    String?
+  emergencyContactRelation String?
+  identificationVerifiedAt DateTime?
+
   accidents        Accident[]
   emergencyRequests EmergencyRequest[]
   sessions         Session[]
+
+  @@index([username])
 }
 
 model Session {

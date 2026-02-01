@@ -208,6 +208,124 @@
           }
         }
       ]
+    },
+    {
+      "name": "Profile (/me)",
+      "item": [
+        {
+          "name": "GET /me/profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["me", "profile"]
+            }
+          }
+        },
+        {
+          "name": "GET /me/medical-info",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/medical-info",
+              "host": ["{{baseUrl}}"],
+              "path": ["me", "medical-info"]
+            }
+          }
+        },
+        {
+          "name": "PUT /me/medical-info",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bloodType\": \"A+\",\n  \"allergies\": [\"Penicillin\", \"Peanuts\"],\n  \"chronicConditions\": [\"Diabetes Type 2\", \"Hypertension\"],\n  \"currentMedications\": [\"Metformin 500mg\", \"Lisinopril 10mg\"],\n  \"disabilities\": [],\n  \"medicalNotes\": \"Patient is allergic to penicillin. Please use alternative antibiotics.\",\n  \"heightCm\": 175.5,\n  \"weightKg\": 78.2,\n  \"smoker\": false,\n  \"alcoholConsumption\": \"occasional\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/me/medical-info",
+              "host": ["{{baseUrl}}"],
+              "path": ["me", "medical-info"]
+            }
+          }
+        },
+        {
+          "name": "GET /me/identification",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/identification",
+              "host": ["{{baseUrl}}"],
+              "path": ["me", "identification"]
+            }
+          }
+        },
+        {
+          "name": "PUT /me/identification",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullLegalName\": \"Ahmed Mohamed Hassan\",\n  \"dateOfBirth\": \"1990-05-15T00:00:00.000Z\",\n  \"gender\": \"male\",\n  \"nationality\": \"Egyptian\",\n  \"nationalIdNumber\": \"29005150123456\",\n  \"emergencyContactName\": \"Fatma Hassan\",\n  \"emergencyContactPhone\": \"+201234567890\",\n  \"emergencyContactRelation\": \"Spouse\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/me/identification",
+              "host": ["{{baseUrl}}"],
+              "path": ["me", "identification"]
+            }
+          }
+        },
+        {
+          "name": "GET /me/personal-info",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/me/personal-info",
+              "host": ["{{baseUrl}}"],
+              "path": ["me", "personal-info"]
+            }
+          }
+        },
+        {
+          "name": "PATCH /me/personal-info",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"displayName\": \"Ahmed H.\",\n  \"username\": \"ahmed_hassan\",\n  \"profilePictureUrl\": \"https://example.com/photos/ahmed.jpg\",\n  \"phoneNumber\": \"+201234567890\",\n  \"country\": \"Egypt\",\n  \"city\": \"Cairo\",\n  \"address\": \"123 Tahrir Street\",\n  \"street\": \"Tahrir Street\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/me/personal-info",
+              "host": ["{{baseUrl}}"],
+              "path": ["me", "personal-info"]
+            }
+          }
+        }
+      ]
     }
   ],
   "variable": [

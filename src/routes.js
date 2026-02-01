@@ -4,6 +4,7 @@ import { createAccidentsRouter } from "./modules/accidents/accidents.routes.js";
 import { createCentralUnitRouter } from "./modules/centralUnit/centralUnit.routes.js";
 import { notificationsRouter } from "./modules/notifications/notifications.routes.js";
 import { createAuthRouter } from "./modules/auth/auth.routes.js";
+import { createProfileRouter } from "./modules/profile/profile.routes.js";
 
 import { getPrisma } from "./db/prisma.js";
 import { createAccidentsRepo } from "./modules/accidents/accidents.repo.js";
@@ -16,6 +17,9 @@ import { createNotificationsService } from "./modules/notifications/notification
 import { createAuthRepo } from "./modules/auth/auth.repo.js";
 import { createAuthService } from "./modules/auth/auth.service.js";
 import { createAuthController } from "./modules/auth/auth.controller.js";
+import { createProfileRepo } from "./modules/profile/profile.repo.js";
+import { createProfileService } from "./modules/profile/profile.service.js";
+import { createProfileController } from "./modules/profile/profile.controller.js";
 
 export function createRoutes(deps = {}) {
   const router = Router();
@@ -58,6 +62,16 @@ export function createRoutes(deps = {}) {
     })
   );
   router.use(notificationsRouter);
+
+  // Profile endpoints
+  const profileService = createProfileService({
+    profileRepo: createProfileRepo(prisma),
+  });
+  router.use(
+    createProfileRouter({
+      profileController: createProfileController({ profileService }),
+    })
+  );
 
   return router;
 }
