@@ -33,6 +33,25 @@ export function createCentralUnitRepo(prisma) {
         select: { id: true },
       });
     },
+
+    async getActiveUsersWithFcmTokens() {
+      /**
+       * Get all users who have active sessions with valid FCM tokens
+       * These are users who can receive push notifications
+       */
+      const sessions = await prisma.session.findMany({
+        where: {
+          fcmToken: { not: null },
+          revokedAt: null,
+          expiresAt: { gt: new Date() },
+        },
+        distinct: ["userId"],
+        select: { userId: true },
+      });
+
+      // Extract unique user IDs
+      return sessions.map((s) => s.userId);
+    },
   };
 }
 

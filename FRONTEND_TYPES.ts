@@ -2,7 +2,7 @@
  * SafeSpace Mobile App - API Type Definitions & Interfaces
  * Use this file in your mobile app for full type safety
  * 
- * Last Updated: February 1, 2026
+ * Last Updated: February 2, 2026
  */
 
 // ============================================================================
@@ -164,6 +164,134 @@ export interface PersonalInfoUpdate {
 }
 
 // ============================================================================
+// EMERGENCY REQUESTS
+// ============================================================================
+
+export type EmergencyType =
+  | 'CAR_ACCIDENT'
+  | 'MEDICAL_EMERGENCY'
+  | 'FIRE'
+  | 'CRIME_VIOLENCE'
+  | 'VEHICLE_BREAKDOWN'
+  | 'OTHER';
+
+export type EmergencyService =
+  | 'POLICE'
+  | 'AMBULANCE'
+  | 'FIRE_DEPARTMENT'
+  | 'ROADSIDE_ASSISTANCE';
+
+export type EmergencyRequestStatus = 'QUEUED' | 'SENT' | 'FAILED';
+
+export interface Location {
+  lat: number; // -90 to 90
+  lng: number; // -180 to 180
+}
+
+export interface EmergencyRequest {
+  id: string;
+  requesterUserId?: string;
+  emergencyTypes: EmergencyType[];
+  emergencyServices: EmergencyService[];
+  description: string; // 1-500 characters
+  photoUri?: string;
+  lat: number;
+  lng: number;
+  timestamp: string; // ISO 8601 DateTime
+  status: EmergencyRequestStatus;
+  createdAt: string; // ISO 8601 DateTime
+  updatedAt: string; // ISO 8601 DateTime
+  requester?: {
+    id: string;
+    fullName: string;
+    email: string;
+    phoneNumber?: string;
+    bloodType?: BloodType;
+    allergies?: string[];
+    chronicConditions?: string[];
+    emergencyContactName?: string;
+    emergencyContactPhone?: string;
+  };
+}
+
+export interface CreateEmergencyRequestPayload {
+  emergencyTypes: EmergencyType[]; // At least 1 required
+  emergencyServices: EmergencyService[]; // At least 1 required
+  description: string; // 1-500 characters
+  location: Location;
+  timestamp?: string; // ISO 8601 DateTime, auto-generated if not provided
+}
+
+export interface CreateEmergencyRequestResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    emergencyTypes: EmergencyType[];
+    emergencyServices: EmergencyService[];
+    description: string;
+    photoUri?: string;
+    lat: number;
+    lng: number;
+    timestamp: string;
+    status: EmergencyRequestStatus;
+    createdAt: string;
+  };
+}
+
+export interface GetEmergencyRequestResponse {
+  success: boolean;
+  data: EmergencyRequest;
+}
+
+export interface ListEmergencyRequestsQuery {
+  status?: EmergencyRequestStatus;
+  limit?: number; // 1-100, default: 20
+  offset?: number; // default: 0
+}
+
+export interface ListEmergencyRequestsResponse {
+  success: boolean;
+  data: Array<{
+    id: string;
+    requesterUserId?: string;
+    emergencyTypes: EmergencyType[];
+    emergencyServices: EmergencyService[];
+    description: string;
+    photoUri?: string;
+    lat: number;
+    lng: number;
+    timestamp: string;
+    status: EmergencyRequestStatus;
+    createdAt: string;
+    requester?: {
+      id: string;
+      fullName: string;
+      phoneNumber?: string;
+    };
+  }>;
+  meta: {
+    total: number;
+    limit: number;
+    offset: number;
+  };
+}
+
+export interface UpdateEmergencyRequestStatusPayload {
+  status: EmergencyRequestStatus;
+}
+
+export interface UpdateEmergencyRequestStatusResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    status: EmergencyRequestStatus;
+    updatedAt: string;
+  };
+}
+
+// ============================================================================
 // ERROR HANDLING
 // ============================================================================
 
@@ -194,6 +322,30 @@ export interface ValidationIssue {
 // ============================================================================
 
 export const VALIDATION_CONSTRAINTS = {
+  emergency: {
+    emergencyTypes: {
+      enum: ['CAR_ACCIDENT', 'MEDICAL_EMERGENCY', 'FIRE', 'CRIME_VIOLENCE', 'VEHICLE_BREAKDOWN', 'OTHER'],
+      minItems: 1,
+    },
+    emergencyServices: {
+      enum: ['POLICE', 'AMBULANCE', 'FIRE_DEPARTMENT', 'ROADSIDE_ASSISTANCE'],
+      minItems: 1,
+    },
+    description: {
+      minLength: 1,
+      maxLength: 500,
+    },
+    location: {
+      lat: {
+        min: -90,
+        max: 90,
+      },
+      lng: {
+        min: -180,
+        max: 180,
+      },
+    },
+  },
   medicalInfo: {
     bloodType: {
       enum: ['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'],
@@ -340,6 +492,24 @@ export interface IProfileService {
   updatePersonalInfo(data: PersonalInfoUpdate): Promise<PersonalInfo>;
 }
 
+export interface IEmergencyService {
+  createEmergencyRequest(
+    payload: CreateEmergencyRequestPayload,
+    photo?: File | Blob
+  ): Promise<CreateEmergencyRequestResponse>;
+  
+  getEmergencyRequest(id: string): Promise<GetEmergencyRequestResponse>;
+  
+  listEmergencyRequests(
+    query?: ListEmergencyRequestsQuery
+  ): Promise<ListEmergencyRequestsResponse>;
+  
+  updateEmergencyRequestStatus(
+    id: string,
+    payload: UpdateEmergencyRequestStatusPayload
+  ): Promise<UpdateEmergencyRequestStatusResponse>;
+}
+
 // ============================================================================
 // STATE MANAGEMENT
 // ============================================================================
@@ -366,6 +536,15 @@ export interface AuthState {
   user: UserBase | null;
   accessToken: string | null;
   refreshToken: string | null;
+}
+
+export interface EmergencyState {
+  loading: boolean;
+  error: ApiError | null;
+  currentRequest: EmergencyRequest | null;
+  requests: EmergencyRequest[];
+  total: number;
+  lastUpdated?: Date;
 }
 
 // ============================================================================
@@ -407,6 +586,14 @@ export interface PersonalInfoFormData {
   city: string;
   address: string;
   street: string;
+}
+
+export interface EmergencyRequestFormData {
+  emergencyTypes: EmergencyType[];
+  emergencyServices: EmergencyService[];
+  description: string;
+  location: Location;
+  photo?: File | Blob;
 }
 
 // ============================================================================

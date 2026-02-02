@@ -1,7 +1,4 @@
-import {
-  reportAccidentSchema,
-  emergencyRequestSchema,
-} from "./accidents.validators.js";
+import { reportAccidentSchema } from "./accidents.validators.js";
 
 export function createAccidentsController({ accidentsService }) {
   return {
@@ -53,22 +50,6 @@ export function createAccidentsController({ accidentsService }) {
           media: body.media || [],
         });
         res.status(201).json(result);
-      } catch (err) {
-        next(err);
-      }
-    },
-
-    emergencyRequestHandler: async (req, res, next) => {
-      try {
-        const body = emergencyRequestSchema.parse(req.body);
-        const result = await accidentsService.createEmergencyRequest({
-          requesterUserId: null,
-          requestedAt: body.requestedAt,
-          location: body.location,
-          message: body.message,
-          requestTypes: body.requestTypes,
-        });
-        res.status(202).json(result);
       } catch (err) {
         next(err);
       }

@@ -13,7 +13,6 @@ export const updateMedicalInfoSchema = z.object({
   heightCm: z.number().min(30).max(300).optional(),
   weightKg: z.number().min(2).max(500).optional(),
   smoker: z.boolean().optional(),
-  alcoholConsumption: z.enum(["none", "occasional", "moderate", "heavy"]).optional(),
 }).strict();
 
 /**
@@ -22,7 +21,7 @@ export const updateMedicalInfoSchema = z.object({
 export const updateIdentificationSchema = z.object({
   fullLegalName: z.string().min(1).max(200).optional(),
   dateOfBirth: z.string().datetime().optional(),
-  gender: z.enum(["male", "female", "other", "prefer_not_to_say"]).optional(),
+  gender: z.enum(["male", "female"]).optional(),
   nationality: z.string().max(100).optional(),
   nationalIdNumber: z.string().max(100).optional(),
   passportNumber: z.string().max(100).optional(),
@@ -36,12 +35,10 @@ export const updateIdentificationSchema = z.object({
  */
 export const updatePersonalInfoSchema = z.object({
   displayName: z.string().min(1).max(100).optional(),
-  username: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores, and hyphens").optional(),
   profilePictureUrl: z.string().url().max(500).optional(),
   email: z.string().email().max(255).optional(),
   phoneNumber: z.string().max(50).optional(),
   country: z.string().max(100).optional(),
   city: z.string().max(100).optional(),
   address: z.string().max(500).optional(),
-  street: z.string().max(200).optional(),
 }).strict();

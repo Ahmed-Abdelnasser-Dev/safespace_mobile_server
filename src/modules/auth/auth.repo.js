@@ -32,6 +32,14 @@ export function createAuthRepo(prisma) {
       });
     },
 
+    async updateSessionFcmToken(sessionId, fcmToken) {
+      return prisma.session.update({
+        where: { id: sessionId },
+        data: { fcmToken },
+        select: { id: true, fcmToken: true },
+      });
+    },
+
     async findSessionById(sessionId) {
       return prisma.session.findUnique({ where: { id: sessionId } });
     },
@@ -48,6 +56,13 @@ export function createAuthRepo(prisma) {
       return prisma.session.updateMany({
         where: { userId, revokedAt: null },
         data: { revokedAt: new Date() },
+      });
+    },
+
+    async getUserActiveSessions(userId) {
+      return prisma.session.findMany({
+        where: { userId, revokedAt: null },
+        select: { id: true, deviceId: true, fcmToken: true, expiresAt: true },
       });
     },
   };

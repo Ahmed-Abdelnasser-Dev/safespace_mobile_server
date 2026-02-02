@@ -15,13 +15,11 @@ export function createProfileRepo(prisma) {
     
     // Personal Information
     displayName: true,
-    username: true,
     profilePictureUrl: true,
     phoneNumber: true,
     country: true,
     city: true,
     address: true,
-    street: true,
     
     // Medical Information
     bloodType: true,
@@ -33,8 +31,7 @@ export function createProfileRepo(prisma) {
     heightCm: true,
     weightKg: true,
     smoker: true,
-    alcoholConsumption: true,
-    medicalInfoUpdatedAt: true,
+    lastUpdatedAt: true,
     
     // Identification Data
     fullLegalName: true,
@@ -46,7 +43,7 @@ export function createProfileRepo(prisma) {
     emergencyContactName: true,
     emergencyContactPhone: true,
     emergencyContactRelation: true,
-    identificationVerifiedAt: true,
+    verifiedAt: true,
   };
 
   return {
@@ -67,8 +64,7 @@ export function createProfileRepo(prisma) {
           heightCm: true,
           weightKg: true,
           smoker: true,
-          alcoholConsumption: true,
-          medicalInfoUpdatedAt: true,
+          lastUpdatedAt: true,
         },
       });
     },
@@ -81,7 +77,7 @@ export function createProfileRepo(prisma) {
         where: { id: userId },
         data: {
           ...data,
-          medicalInfoUpdatedAt: new Date(),
+          lastUpdatedAt: new Date(),
         },
         select: {
           id: true,
@@ -94,8 +90,7 @@ export function createProfileRepo(prisma) {
           heightCm: true,
           weightKg: true,
           smoker: true,
-          alcoholConsumption: true,
-          medicalInfoUpdatedAt: true,
+          lastUpdatedAt: true,
         },
       });
     },
@@ -117,7 +112,7 @@ export function createProfileRepo(prisma) {
           emergencyContactName: true,
           emergencyContactPhone: true,
           emergencyContactRelation: true,
-          identificationVerifiedAt: true,
+          verifiedAt: true,
         },
       });
     },
@@ -140,7 +135,7 @@ export function createProfileRepo(prisma) {
           emergencyContactName: true,
           emergencyContactPhone: true,
           emergencyContactRelation: true,
-          identificationVerifiedAt: true,
+          verifiedAt: true,
         },
       });
     },
@@ -154,14 +149,12 @@ export function createProfileRepo(prisma) {
         select: {
           id: true,
           displayName: true,
-          username: true,
           profilePictureUrl: true,
           email: true,
           phoneNumber: true,
           country: true,
           city: true,
           address: true,
-          street: true,
         },
       });
     },
@@ -176,14 +169,12 @@ export function createProfileRepo(prisma) {
         select: {
           id: true,
           displayName: true,
-          username: true,
           profilePictureUrl: true,
           email: true,
           phoneNumber: true,
           country: true,
           city: true,
           address: true,
-          street: true,
         },
       });
     },
@@ -196,20 +187,6 @@ export function createProfileRepo(prisma) {
         where: { id: userId },
         select: safeUserSelect,
       });
-    },
-
-    /**
-     * Check if username is available
-     */
-    async isUsernameAvailable(username, excludeUserId) {
-      const existing = await prisma.user.findUnique({
-        where: { username },
-        select: { id: true },
-      });
-      
-      if (!existing) return true;
-      if (excludeUserId && existing.id === excludeUserId) return true;
-      return false;
     },
   };
 }

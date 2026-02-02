@@ -18,6 +18,22 @@ enum EmergencyRequestStatus {
   FAILED
 }
 
+enum EmergencyType {
+  CAR_ACCIDENT
+  MEDICAL_EMERGENCY
+  FIRE
+  CRIME_VIOLENCE
+  VEHICLE_BREAKDOWN
+  OTHER
+}
+
+enum EmergencyService {
+  POLICE
+  AMBULANCE
+  FIRE_DEPARTMENT
+  ROADSIDE_ASSISTANCE
+}
+
 model User {
   id           String   @id @default(uuid())
   email        String   @unique
@@ -30,13 +46,11 @@ model User {
 
   // Personal Information
   displayName       String?
-  username          String?  @unique
   profilePictureUrl String?
   phoneNumber       String?
   country           String?
   city              String?
   address           String?
-  street            String?
 
   // Medical Information
   bloodType           String?
@@ -48,8 +62,7 @@ model User {
   heightCm            Float?
   weightKg            Float?
   smoker              Boolean?
-  alcoholConsumption  String?  // e.g., "none", "occasional", "moderate", "heavy"
-  medicalInfoUpdatedAt DateTime?
+  lastUpdatedAt       DateTime?
 
   // Identification Data
   fullLegalName            String?
@@ -61,13 +74,11 @@ model User {
   emergencyContactName     String?
   emergencyContactPhone    String?
   emergencyContactRelation String?
-  identificationVerifiedAt DateTime?
+  verifiedAt               DateTime?
 
   accidents        Accident[]
   emergencyRequests EmergencyRequest[]
   sessions         Session[]
-
-  @@index([username])
 }
 
 model Session {
@@ -122,21 +133,24 @@ model AccidentMedia {
 }
 
 model EmergencyRequest {
-  id            String                @id @default(uuid())
-  requesterUserId String?
-  requestedAt   DateTime
-  lat           Float
-  lng           Float
-  message       String?
-  requestTypes  String[]
-  status        EmergencyRequestStatus @default(QUEUED)
-  createdAt     DateTime               @default(now())
-  updatedAt     DateTime               @updatedAt
+  id                String                 @id @default(uuid())
+  requesterUserId   String?
+  emergencyTypes    EmergencyType[]
+  emergencyServices EmergencyService[]
+  description       String
+  photoUri          String?
+  lat               Float
+  lng               Float
+  timestamp         DateTime               @default(now())
+  status            EmergencyRequestStatus @default(QUEUED)
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
 
   requester User? @relation(fields: [requesterUserId], references: [id], onDelete: SetNull)
 
   @@index([requesterUserId])
   @@index([createdAt])
+  @@index([timestamp])
 }
 
 model NotificationLog {

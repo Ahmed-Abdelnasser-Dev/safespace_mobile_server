@@ -44,14 +44,21 @@ This starts:
   - `POST /auth/login`
   - `POST /auth/refresh-token`
   - `POST /auth/logout`
-- Accidents & emergency:
+- Accidents:
   - `POST /accident/report-accident`
-  - `POST /accident/emergency-request`
+- Emergency:
+  - `POST /emergency/request` - Create emergency request
+  - `GET /emergency/request/:id` - Get emergency request by ID
+  - `GET /emergency/requests` - List emergency requests
+  - `PATCH /emergency/request/:id/status` - Update status (auth required)
 - Central Unit:
   - `POST /central-unit/send-accident-to-central-unit`
   - `POST /central-unit/receive-accident-from-central-unit`
 - Notifications:
   - `POST /notifications/send-accident-notification`
+- Profile:
+  - `GET /profile` - Get user profile (auth required)
+  - `PATCH /profile` - Update user profile (auth required)
 
 ## Central Unit inbound mTLS
 

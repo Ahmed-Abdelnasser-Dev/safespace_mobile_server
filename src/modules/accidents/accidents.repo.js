@@ -22,19 +22,25 @@ export function createAccidentsRepo(prisma) {
       });
     },
 
-    async createEmergencyRequest(data) {
-      return prisma.emergencyRequest.create({
-        data: {
-          requesterUserId: data.requesterUserId,
-          requestedAt: data.requestedAt,
-          lat: data.lat,
-          lng: data.lng,
-          message: data.message,
-          requestTypes: data.requestTypes,
-          status: data.status || "QUEUED",
+    async getActiveUsersWithFcmTokens(excludeUserId = null) {
+      /**
+       * Get all users who have active sessions with valid FCM tokens
+       * These are users who can receive push notifications about accidents
+       * @param {string|null} excludeUserId - User ID to exclude (e.g., the accident reporter)
+       */
+      const sessions = await prisma.session.findMany({
+        where: {
+          fcmToken: { not: null },
+          revokedAt: null,
+          expiresAt: { gt: new Date() },
+          ...(excludeUserId ? { userId: { not: excludeUserId } } : {}),
         },
-        select: { id: true },
+        distinct: ["userId"],
+        select: { userId: true },
       });
+
+      // Extract unique user IDs
+      return sessions.map((s) => s.userId);
     },
   };
 }

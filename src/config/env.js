@@ -18,6 +18,10 @@ const envSchema = z.object({
   JWT_ACCESS_TTL: z.string().default("15m"),
   JWT_REFRESH_TTL: z.string().default("30d"),
 
+  // Firebase Cloud Messaging
+  FIREBASE_SERVICE_ACCOUNT_PATH: z.string().optional(),
+  FIREBASE_PROJECT_ID: z.string().optional(),
+
   // Central Unit outbound
   CENTRAL_UNIT_BASE_URL: z.string().url().optional(),
 

@@ -1,6 +1,6 @@
 import { createFcmProvider } from "./fcm.provider.js";
 
-export function createNotificationsService({ prisma, provider = createFcmProvider() }) {
+export function createNotificationsService({ prisma, provider = createFcmProvider(prisma) }) {
   return {
     async sendAccidentNotification({ accidentId, userIds, title, body, streetName, data }) {
       const payload = {
@@ -19,7 +19,12 @@ export function createNotificationsService({ prisma, provider = createFcmProvide
             accidentId,
             userId,
             provider: "FCM",
-            status: "SENT",
+            status: result.failures.some((f) => f.userId === userId)
+              ? "FAILED"
+              : "SENT",
+            error: result.failures
+              .find((f) => f.userId === userId)
+              ?.error || null,
           })),
         });
       } catch {

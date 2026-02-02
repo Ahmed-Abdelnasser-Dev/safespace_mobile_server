@@ -22,3 +22,10 @@ export const refreshSchema = z.object({ refreshToken: z.string().min(1) }).stric
 
 export const logoutSchema = z.object({ refreshToken: z.string().min(1) }).strict();
 
+export const updateFcmTokenSchema = z
+  .object({
+    sessionId: z.string().uuid(),
+    fcmToken: z.string().max(500),
+  })
+  .strict();
+

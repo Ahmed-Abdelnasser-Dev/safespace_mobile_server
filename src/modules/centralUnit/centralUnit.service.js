@@ -77,22 +77,49 @@ export function createCentralUnitService({
         lng: location.lng,
       });
 
-      // "In range" matching is required to be pure/testable; we keep the core logic in accidents module.
-      // We don't yet have user live locations in schema, so we treat impacted users as empty list for now.
-      const impactedUsers = [];
-      void isInRange(location, location, 1); // keep pure function reachable (no-op)
+      // Get all users with active FCM tokens to notify them
+      // In a future enhancement, we can filter by location (geo-fencing)
+      let impactedUsers = [];
+      try {
+        impactedUsers = await centralUnitRepo.getActiveUsersWithFcmTokens();
+        logger.info(
+          { accidentId: created.id, userCount: impactedUsers.length },
+          "Found active users to notify about accident"
+        );
+      } catch (err) {
+        logger.warn(
+          { err, accidentId: created.id },
+          "Failed to fetch active users for notification"
+        );
+      }
 
-      if (
-        notificationsService?.sendAccidentNotification &&
-        impactedUsers.length
-      ) {
-        await notificationsService.sendAccidentNotification({
-          accidentId: created.id,
-          userIds: impactedUsers,
-          title: "Accident nearby",
-          body: "An accident was reported near you.",
-          data: { type: "ACCIDENT", accidentId: created.id },
-        });
+      // Send notification to all active users about the accident
+      if (notificationsService?.sendAccidentNotification && impactedUsers.length > 0) {
+        try {
+          await notificationsService.sendAccidentNotification({
+            accidentId: created.id,
+            userIds: impactedUsers,
+            title: "Accident Nearby",
+            body: "An accident has been reported in your area. Please stay alert.",
+            streetName: null,
+            data: {
+              type: "ACCIDENT",
+              accidentId: created.id,
+              lat: String(location.lat),
+              lng: String(location.lng),
+              source: "CENTRAL_UNIT",
+            },
+          });
+          logger.info(
+            { accidentId: created.id, userCount: impactedUsers.length },
+            "Accident notification sent to users"
+          );
+        } catch (err) {
+          logger.error(
+            { err, accidentId: created.id },
+            "Failed to send accident notification"
+          );
+        }
       }
 
       return { ok: true };

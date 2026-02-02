@@ -85,29 +85,12 @@ export function createProfileService({ profileRepo }) {
      * Update user's personal information
      */
     async updatePersonalInfo(userId, data) {
-      // Check username uniqueness if provided
-      if (data.username) {
-        const isAvailable = await profileRepo.isUsernameAvailable(data.username, userId);
-        if (!isAvailable) {
-          throw makeError(409, "CONFLICT", "Username already taken");
-        }
-      }
-      
       try {
         const updated = await profileRepo.updatePersonalInfo(userId, data);
         return updated;
       } catch (err) {
         if (err.code === "P2025") {
           throw makeError(404, "NOT_FOUND", "User not found");
-        }
-        if (err.code === "P2002") {
-          // Unique constraint violation
-          if (err.meta?.target?.includes("username")) {
-            throw makeError(409, "CONFLICT", "Username already taken");
-          }
-          if (err.meta?.target?.includes("email")) {
-            throw makeError(409, "CONFLICT", "Email already in use");
-          }
         }
         throw err;
       }

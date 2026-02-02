@@ -6,6 +6,7 @@ export function createAuthRouter({ authController }) {
   router.post("/auth/login", authController.login);
   router.post("/auth/refresh-token", authController.refresh);
   router.post("/auth/logout", authController.logout);
+  router.post("/auth/update-fcm-token", authController.updateFcmToken);
   return router;
 }
 
@@ -14,7 +15,8 @@ export const authRouter = createAuthRouter({
     register: (req, res) => res.status(500).json({ message: "Router not wired" }),
     login: (req, res) => res.status(500).json({ message: "Router not wired" }),
     refresh: (req, res) => res.status(500).json({ message: "Router not wired" }),
-    logout: (req, res) => res.status(500).json({ message: "Router not wired" })
+    logout: (req, res) => res.status(500).json({ message: "Router not wired" }),
+    updateFcmToken: (req, res) => res.status(500).json({ message: "Router not wired" })
   }
 });
 

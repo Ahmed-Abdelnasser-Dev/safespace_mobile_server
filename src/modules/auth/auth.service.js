@@ -164,6 +164,20 @@ export function createAuthService({ authRepo }) {
       }
       return { ok: true };
     },
+
+    async updateFcmToken({ sessionId, fcmToken }) {
+      const session = await authRepo.findSessionById(sessionId);
+      if (!session) {
+        throw makeError(404, "NOT_FOUND", "Session not found");
+      }
+
+      if (session.revokedAt) {
+        throw makeError(401, "UNAUTHORIZED", "Session has been revoked");
+      }
+
+      const updated = await authRepo.updateSessionFcmToken(sessionId, fcmToken);
+      return { ok: true, fcmToken: updated.fcmToken };
+    },
   };
 }
 

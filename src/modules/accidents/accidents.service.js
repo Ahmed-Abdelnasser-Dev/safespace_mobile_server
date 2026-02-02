@@ -24,7 +24,7 @@ export function isInRange(a, b, radiusMeters) {
   return haversineMeters(a, b) <= radiusMeters;
 }
 
-export function createAccidentsService({ accidentsRepo, centralUnitService }) {
+export function createAccidentsService({ accidentsRepo, centralUnitService, notificationsService }) {
   return {
     async reportAccident({ reporterUserId, location, message, occurredAt, media }) {
       const created = await accidentsRepo.createAccident({
@@ -40,7 +40,7 @@ export function createAccidentsService({ accidentsRepo, centralUnitService }) {
         status: "RECEIVED",
       });
 
-      // Best-effort: notify Central Unit right after persisting the accident.
+      // Best-effort: Send to Central Unit for coordination and additional processing
       if (centralUnitService?.sendAccidentToCentralUnit) {
         centralUnitService
           .sendAccidentToCentralUnit({
@@ -59,21 +59,43 @@ export function createAccidentsService({ accidentsRepo, centralUnitService }) {
           });
       }
 
+      // Best-effort: Notify other mobile users about the reported accident
+      if (notificationsService?.sendAccidentNotification) {
+        try {
+          // Get all active users with FCM tokens (excluding the reporter)
+          const activeUsers = await accidentsRepo.getActiveUsersWithFcmTokens(reporterUserId);
+
+          if (activeUsers.length > 0) {
+            await notificationsService.sendAccidentNotification({
+              accidentId: created.id,
+              userIds: activeUsers,
+              title: "Accident Report",
+              body: message || "An accident has been reported nearby",
+              streetName: null,
+              data: {
+                type: "ACCIDENT",
+                accidentId: created.id,
+                lat: String(location.lat),
+                lng: String(location.lng),
+                source: "MOBILE_USER",
+                message: message || null,
+              },
+            });
+
+            logger.info(
+              { accidentId: created.id, userCount: activeUsers.length },
+              "Accident notification sent to users"
+            );
+          }
+        } catch (err) {
+          logger.warn(
+            { err, accidentId: created.id },
+            "failed to send accident notification to mobile users"
+          );
+        }
+      }
+
       return { accidentId: created.id, status: "received" };
-    },
-
-    async createEmergencyRequest({ requesterUserId, requestedAt, location, message, requestTypes }) {
-      const created = await accidentsRepo.createEmergencyRequest({
-        requesterUserId,
-        requestedAt: new Date(requestedAt),
-        lat: location.lat,
-        lng: location.lng,
-        message: message || null,
-        requestTypes,
-        status: "QUEUED",
-      });
-
-      return { requestId: created.id, status: "queued" };
     },
   };
 }

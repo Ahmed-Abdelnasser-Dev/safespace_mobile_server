@@ -1,4 +1,4 @@
-import { registerSchema, loginSchema, refreshSchema, logoutSchema } from "./auth.validators.js";
+import { registerSchema, loginSchema, refreshSchema, logoutSchema, updateFcmTokenSchema } from "./auth.validators.js";
 
 export function createAuthController({ authService }) {
   return {
@@ -36,6 +36,16 @@ export function createAuthController({ authService }) {
       try {
         const body = logoutSchema.parse(req.body);
         const result = await authService.logout(body);
+        res.status(200).json(result);
+      } catch (err) {
+        next(err);
+      }
+    },
+
+    updateFcmToken: async (req, res, next) => {
+      try {
+        const body = updateFcmTokenSchema.parse(req.body);
+        const result = await authService.updateFcmToken(body);
         res.status(200).json(result);
       } catch (err) {
         next(err);
