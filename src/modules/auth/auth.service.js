@@ -1,8 +1,15 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { randomBytes } from "node:crypto";
 
 import { sha256Hex, safeEqual } from "../../utils/crypto.js";
 import { getEnv } from "../../config/env.js";
+
+// Security constants
+const MAX_FAILED_LOGIN_ATTEMPTS = 5;
+const ACCOUNT_LOCK_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+const LOGIN_ATTEMPT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const EMAIL_VERIFICATION_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 function makeError(statusCode, code, message) {
   const err = new Error(message);
@@ -50,11 +57,19 @@ export function createAuthService({ authRepo }) {
   return {
     async register({ email, password, fullName, phone }) {
       const existing = await authRepo.findUserByEmail(email);
-      if (existing) throw makeError(409, "CONFLICT", "Email already in use");
+      if (existing) throw makeError(409, "CONFLICT", "User already exists");
 
       const passwordHash = await bcrypt.hash(password, 12);
       const user = await authRepo.createUser({ email, passwordHash, fullName, phone });
 
+      // Generate email verification token
+      const verificationToken = randomBytes(32).toString("hex");
+      const verificationExpiry = new Date(Date.now() + EMAIL_VERIFICATION_EXPIRY_MS);
+      await authRepo.createEmailVerificationToken(user.id, verificationToken, verificationExpiry);
+
+      // TODO: Send verification email with token
+      // For now, we'll return the token in response (REMOVE IN PRODUCTION)
+      
       const accessToken = signAccessToken({ userId: user.id });
       // Create an initial session so client can refresh immediately.
       const expiresAt = new Date(Date.now() + parseTtlToMs(refreshTtl));
@@ -69,15 +84,85 @@ export function createAuthService({ authRepo }) {
       const refreshToken = signRefreshToken({ userId: user.id, sessionId: session.id });
       await authRepo.updateSessionRefreshHash(session.id, sha256Hex(refreshToken));
 
-      return { user, accessToken, refreshToken };
+      return { 
+        user, 
+        accessToken, 
+        refreshToken,
+        emailVerificationToken: verificationToken, // TEMP: Remove in production
+        message: "Please verify your email address"
+      };
     },
 
-    async login({ email, password, deviceId, fcmToken }) {
+    async login({ email, password, deviceId, fcmToken, ipAddress, userAgent }) {
       const user = await authRepo.findUserByEmail(email);
-      if (!user) throw makeError(401, "UNAUTHORIZED", "Invalid credentials");
+      
+      // Check if account is locked
+      if (user?.accountLockedUntil) {
+        if (new Date(user.accountLockedUntil) > new Date()) {
+          const remainingMinutes = Math.ceil(
+            (new Date(user.accountLockedUntil).getTime() - Date.now()) / 60000
+          );
+          throw makeError(
+            403,
+            "ACCOUNT_LOCKED",
+            `Account is locked. Try again in ${remainingMinutes} minutes`
+          );
+        } else {
+          // Lock has expired, unlock the account
+          await authRepo.unlockUserAccount(user.id);
+        }
+      }
+
+      // Validate credentials
+      if (!user) {
+        // Record failed attempt even for non-existent users (don't reveal if user exists)
+        await authRepo.recordLoginAttempt({
+          userId: null,
+          email,
+          ipAddress: ipAddress || "unknown",
+          userAgent: userAgent || "unknown",
+          successful: false,
+        });
+        throw makeError(401, "UNAUTHORIZED", "Invalid credentials");
+      }
 
       const ok = await bcrypt.compare(password, user.passwordHash || "");
-      if (!ok) throw makeError(401, "UNAUTHORIZED", "Invalid credentials");
+      
+      if (!ok) {
+        // Record failed attempt
+        await authRepo.recordLoginAttempt({
+          userId: user.id,
+          email,
+          ipAddress: ipAddress || "unknown",
+          userAgent: userAgent || "unknown",
+          successful: false,
+        });
+
+        // Check if we should lock the account
+        const sinceDate = new Date(Date.now() - LOGIN_ATTEMPT_WINDOW_MS);
+        const failedAttempts = await authRepo.getRecentFailedLoginAttempts(email, sinceDate);
+
+        if (failedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS) {
+          const lockUntil = new Date(Date.now() + ACCOUNT_LOCK_DURATION_MS);
+          await authRepo.lockUserAccount(user.id, lockUntil);
+          throw makeError(
+            403,
+            "ACCOUNT_LOCKED",
+            `Too many failed login attempts. Account locked for ${ACCOUNT_LOCK_DURATION_MS / 60000} minutes`
+          );
+        }
+
+        throw makeError(401, "UNAUTHORIZED", "Invalid credentials");
+      }
+
+      // Successful login - record it
+      await authRepo.recordLoginAttempt({
+        userId: user.id,
+        email,
+        ipAddress: ipAddress || "unknown",
+        userAgent: userAgent || "unknown",
+        successful: true,
+      });
 
       const accessToken = signAccessToken({ userId: user.id });
       const expiresAt = new Date(Date.now() + parseTtlToMs(refreshTtl));
@@ -92,7 +177,12 @@ export function createAuthService({ authRepo }) {
       await authRepo.updateSessionRefreshHash(session.id, sha256Hex(refreshToken));
 
       return {
-        user: { id: user.id, email: user.email, fullName: user.fullName },
+        user: { 
+          id: user.id, 
+          email: user.email, 
+          fullName: user.fullName,
+          emailVerified: user.emailVerified 
+        },
         accessToken,
         refreshToken,
       };
@@ -177,6 +267,60 @@ export function createAuthService({ authRepo }) {
 
       const updated = await authRepo.updateSessionFcmToken(sessionId, fcmToken);
       return { ok: true, fcmToken: updated.fcmToken };
+    },
+
+    async verifyEmail({ token }) {
+      const user = await authRepo.findUserByVerificationToken(token);
+      
+      if (!user) {
+        throw makeError(400, "INVALID_TOKEN", "Invalid or expired verification token");
+      }
+
+      if (user.emailVerificationExpires && new Date(user.emailVerificationExpires) < new Date()) {
+        throw makeError(400, "TOKEN_EXPIRED", "Verification token has expired");
+      }
+
+      if (user.emailVerified) {
+        throw makeError(400, "ALREADY_VERIFIED", "Email already verified");
+      }
+
+      await authRepo.markEmailAsVerified(user.id);
+
+      return { 
+        ok: true, 
+        message: "Email verified successfully",
+        user: {
+          id: user.id,
+          email: user.email,
+          emailVerified: true
+        }
+      };
+    },
+
+    async resendVerificationEmail({ email }) {
+      const user = await authRepo.findUserByEmail(email);
+      
+      if (!user) {
+        // Don't reveal if email exists
+        return { ok: true, message: "If the email exists, a verification link has been sent" };
+      }
+
+      if (user.emailVerified) {
+        throw makeError(400, "ALREADY_VERIFIED", "Email already verified");
+      }
+
+      // Generate new verification token
+      const verificationToken = randomBytes(32).toString("hex");
+      const verificationExpiry = new Date(Date.now() + EMAIL_VERIFICATION_EXPIRY_MS);
+      await authRepo.createEmailVerificationToken(user.id, verificationToken, verificationExpiry);
+
+      // TODO: Send verification email
+
+      return { 
+        ok: true, 
+        message: "Verification email sent",
+        emailVerificationToken: verificationToken // TEMP: Remove in production
+      };
     },
   };
 }

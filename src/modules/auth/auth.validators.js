@@ -29,3 +29,15 @@ export const updateFcmTokenSchema = z
   })
   .strict();
 
+export const verifyEmailSchema = z
+  .object({
+    token: z.string().min(1).max(200),
+  })
+  .strict();
+
+export const resendVerificationSchema = z
+  .object({
+    email: z.string().email(),
+  })
+  .strict();
+

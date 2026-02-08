@@ -65,6 +65,69 @@ export function createAuthRepo(prisma) {
         select: { id: true, deviceId: true, fcmToken: true, expiresAt: true },
       });
     },
+
+    async recordLoginAttempt({ userId, email, ipAddress, userAgent, successful }) {
+      return prisma.loginAttempt.create({
+        data: {
+          userId: userId || null,
+          email,
+          ipAddress,
+          userAgent: userAgent || null,
+          successful,
+        },
+      });
+    },
+
+    async getRecentFailedLoginAttempts(email, sinceDate) {
+      return prisma.loginAttempt.count({
+        where: {
+          email,
+          successful: false,
+          createdAt: { gte: sinceDate },
+        },
+      });
+    },
+
+    async lockUserAccount(userId, lockUntil) {
+      return prisma.user.update({
+        where: { id: userId },
+        data: { accountLockedUntil: lockUntil },
+      });
+    },
+
+    async unlockUserAccount(userId) {
+      return prisma.user.update({
+        where: { id: userId },
+        data: { accountLockedUntil: null },
+      });
+    },
+
+    async createEmailVerificationToken(userId, token, expiresAt) {
+      return prisma.user.update({
+        where: { id: userId },
+        data: {
+          emailVerificationToken: token,
+          emailVerificationExpires: expiresAt,
+        },
+      });
+    },
+
+    async findUserByVerificationToken(token) {
+      return prisma.user.findUnique({
+        where: { emailVerificationToken: token },
+      });
+    },
+
+    async markEmailAsVerified(userId) {
+      return prisma.user.update({
+        where: { id: userId },
+        data: {
+          emailVerified: true,
+          emailVerificationToken: null,
+          emailVerificationExpires: null,
+        },
+      });
+    },
   };
 }
 

@@ -8,6 +8,9 @@ test("POST /accident/report-accident returns 201 with accidentId", async () => {
       login: (req, res) => res.status(501).json({ message: "test stub" }),
       refresh: (req, res) => res.status(501).json({ message: "test stub" }),
       logout: (req, res) => res.status(501).json({ message: "test stub" }),
+      updateFcmToken: (req, res) => res.status(501).json({ message: "test stub" }),
+      verifyEmail: (req, res) => res.status(501).json({ message: "test stub" }),
+      resendVerificationEmail: (req, res) => res.status(501).json({ message: "test stub" }),
     },
     accidentsService: {
       reportAccident: async () => ({ accidentId: "test-id", status: "received" }),
@@ -42,6 +45,9 @@ test("POST /central-unit/receive-accident-from-central-unit requires auth by def
       login: (req, res) => res.status(501).json({ message: "test stub" }),
       refresh: (req, res) => res.status(501).json({ message: "test stub" }),
       logout: (req, res) => res.status(501).json({ message: "test stub" }),
+      updateFcmToken: (req, res) => res.status(501).json({ message: "test stub" }),
+      verifyEmail: (req, res) => res.status(501).json({ message: "test stub" }),
+      resendVerificationEmail: (req, res) => res.status(501).json({ message: "test stub" }),
     },
     accidentsService: {
       reportAccident: async () => ({ accidentId: "test-id", status: "received" }),
