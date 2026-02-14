@@ -113,7 +113,7 @@ export function createFcmProvider(prisma) {
                 fcmToken: { not: null },
                 expiresAt: { gt: new Date() }, // Token must not be expired
               },
-              select: { fcmToken: true, deviceId: true },
+              select: { id: true, fcmToken: true, deviceId: true },
             });
 
             if (sessions.length === 0) {
@@ -162,11 +162,11 @@ export function createFcmProvider(prisma) {
                   // Token is no longer valid, revoke the session
                   try {
                     await prisma.session.update({
-                      where: { id: session.deviceId }, // Note: using deviceId as proxy
+                      where: { id: session.id },
                       data: { revokedAt: new Date() },
                     });
                     logger.info(
-                      `Revoked session due to invalid FCM token for user ${userId}`
+                      `Revoked session ${session.id} due to invalid FCM token for user ${userId}`
                     );
                   } catch (revokeError) {
                     logger.error(
